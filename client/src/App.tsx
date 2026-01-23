@@ -1,35 +1,66 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import axios from "axios";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+// --- THE INTERFACES (The Shapes) ---
+interface Note {
+  key: string;
+  time: number;
 }
 
-export default App
+interface Song {
+  id: number;
+  title: string;
+  notes: Note[];
+}
+// -----------------------------------
+
+const App = () => {
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [error, setError] = useState("");
+
+  // Use the environment variable for Vercel, or localhost for your laptop
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+  const getAllSongs = () => {
+    axios
+      .get(`${API_URL}/api/songs`)
+      .then((response) => {
+        setSongs(response.data);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Could not reach the database.");
+      });
+  };
+
+  useEffect(() => {
+    getAllSongs();
+  }, []);
+
+  return (
+    <div id="App">
+      <header>
+        <h1>🎵 Virtual Tongue Drum</h1>
+        <h2>{songs.length} Songs Available</h2>
+        {error && <p style={{ color: "red" }}>{error}</p>}
+      </header>
+
+      <main>
+        <ul className="song-list">
+          {songs.map((song) => (
+            <li key={song.id} className="song-item">
+              <strong>{song.title}</strong>
+              {/* Now TypeScript knows 'notes' is a list, so .length is safe! */}
+              <span style={{ marginLeft: "10px" }}>
+                ({song.notes.length} notes)
+              </span>
+            </li>
+          ))}
+        </ul>
+      </main>
+    </div>
+  );
+};
+
+export default App;
