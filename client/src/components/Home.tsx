@@ -1,11 +1,6 @@
 import { useState } from "react";
 import TongueDrum from "./TongueDrum";
-
-interface Song {
-  id: number;
-  title: string;
-  notes: string[];
-}
+import type { Song } from "../types"; // <--- IMPORT THE SHARED TYPE
 
 interface HomeProps {
   songs: Song[];

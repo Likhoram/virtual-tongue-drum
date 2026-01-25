@@ -1,15 +1,6 @@
 import { useState } from "react";
 import TongueDrum from "./TongueDrum";
-
-interface Note {
-  key: string;
-  note?: string;
-}
-
-interface Song {
-  title: string;
-  notes: Note[];
-}
+import type { Song } from "../types"; // <--- IMPORT THE SHARED TYPE
 
 interface GameProps {
   song: Song;
@@ -21,35 +12,30 @@ const Game = ({ song, user, onEnd }: GameProps) => {
   const [index, setIndex] = useState(0);
   const [mistakes, setMistakes] = useState(0);
 
-  // The note the user MUST hit right now
   const targetNote = song.notes[index];
 
   const handleHit = (note: string) => {
     if (!targetNote) return;
 
-    // Game Logic: Did they hit the correct key?
-    // We check against 'targetNote.key' because your database stores notes like "C4"
-    // But wait! Your JSON might use "key" as "C4" or "note". Let's assume the JSON is { "key": "C4" }
+    // Use TypeScript's "Type Assertion" (as any) to handle flexible JSON
+    // This stops the red line if your DB sends "key" but TS expects "note"
 
-    // ADJUSTMENT: We check if the played note matches the target note
-    if (note === targetNote.key || note === targetNote.note) {
-      // Correct!
+    const targetKey = targetNote.key || targetNote.note || targetNote;
+
+    if (note === targetKey) {
       const nextIndex = index + 1;
       if (nextIndex >= song.notes.length) {
-        // Song Finished!
         onEnd(Math.max(0, 100 - mistakes * 5), mistakes);
       } else {
         setIndex(nextIndex);
       }
     } else {
-      // Wrong!
       setMistakes((m) => m + 1);
     }
   };
 
   return (
     <div>
-      {/* HUD Header */}
       <div
         style={{
           display: "flex",
@@ -76,15 +62,13 @@ const Game = ({ song, user, onEnd }: GameProps) => {
         <span style={{ color: "#f87171" }}>Mistakes: {mistakes}</span>
       </div>
 
-      {/* The Drum */}
       <div style={{ textAlign: "center" }}>
         <h3 style={{ marginBottom: "20px", color: "#94a3b8" }}>
           Hit the highlighted pad!
         </h3>
 
-        {/* We pass the 'key' (like "C4") as the activeNote so it lights up */}
         <TongueDrum
-          activeNote={targetNote?.key || targetNote?.note}
+          activeNote={targetNote?.key || targetNote?.note || undefined}
           onHit={handleHit}
         />
       </div>
