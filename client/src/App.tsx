@@ -1,64 +1,94 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
-
-// --- THE INTERFACES (The Shapes) ---
-interface Note {
-  key: string;
-  time: number;
-}
-
-interface Song {
-  id: number;
-  title: string;
-  notes: Note[];
-}
-// -----------------------------------
+import Home from "./components/Home";
+import Game from "./components/Game";
+import ResultModal from "./components/ResultModal";
+import type { Song } from "./types";
 
 const App = () => {
+  // State
   const [songs, setSongs] = useState<Song[]>([]);
-  const [error, setError] = useState("");
+  const [screen, setScreen] = useState<"home" | "game" | "result">("home");
+  const [currentUser, setCurrentUser] = useState("");
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [lastResult, setLastResult] = useState({ score: 0, mistakes: 0 });
 
-  // Use the environment variable for Vercel, or localhost for your laptop
+  // Fetch Songs Logic
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  const getAllSongs = () => {
+  useEffect(() => {
     axios
       .get(`${API_URL}/api/songs`)
-      .then((response) => {
-        setSongs(response.data);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Could not reach the database.");
-      });
+      .then((res) => setSongs(res.data))
+      .catch((err) => console.error("API Error:", err));
+  }, [API_URL]);
+
+  // Navigation Logic
+  const startGame = (user: string, songId: number) => {
+    const song = songs.find((s) => s.id === songId);
+    if (song) {
+      setCurrentUser(user);
+      setCurrentSong(song);
+      setScreen("game");
+    }
   };
 
-  useEffect(() => {
-    getAllSongs();
-  }, []);
+  const endGame = (score: number, mistakes: number) => {
+    setLastResult({ score, mistakes });
+
+    // Save to Database
+    if (currentSong) {
+      axios
+        .post(`${API_URL}/api/scores`, {
+          username: currentUser,
+          song_id: currentSong.id,
+          score: score,
+          mistakes: mistakes,
+        })
+        .catch((err) => console.error("Could not save score:", err));
+    }
+
+    setScreen("result");
+  };
 
   return (
-    <div id="App">
-      <header>
-        <h1>🎵 Virtual Tongue Drum</h1>
-        <h2>{songs.length} Songs Available</h2>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+    <div
+      id="App"
+      style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}
+    >
+      {/* Header */}
+      <header
+        style={{ textAlign: "center", marginBottom: "40px", marginTop: "20px" }}
+      >
+        <h1
+          style={{
+            fontSize: "3rem",
+            margin: 0,
+            letterSpacing: "-2px",
+            background: "linear-gradient(to right, #818cf8, #c084fc)",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+          }}
+        >
+          🎵 Virtual Tongue Drum
+        </h1>
       </header>
 
-      <main>
-        <ul className="song-list">
-          {songs.map((song) => (
-            <li key={song.id} className="song-item">
-              <strong>{song.title}</strong>
-              {/* Now TypeScript knows 'notes' is a list, so .length is safe! */}
-              <span style={{ marginLeft: "10px" }}>
-                ({song.notes.length} notes)
-              </span>
-            </li>
-          ))}
-        </ul>
-      </main>
+      {/* Screen Switching */}
+      {screen === "home" && <Home songs={songs} onStart={startGame} />}
+
+      {screen === "game" && currentSong && (
+        <Game song={currentSong} user={currentUser} onEnd={endGame} />
+      )}
+
+      {screen === "result" && (
+        <ResultModal
+          score={lastResult.score}
+          mistakes={lastResult.mistakes}
+          onHome={() => setScreen("home")}
+        />
+      )}
     </div>
   );
 };
