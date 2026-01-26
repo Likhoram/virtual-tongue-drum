@@ -1,4 +1,4 @@
-from .db import db  # Matches your file structure
+from .db import db 
 from datetime import datetime
 
 class User(db.Model):
@@ -6,7 +6,6 @@ class User(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    # This 'player' name is important, we use it in score_routes!
     scores = db.relationship('Score', backref='player', lazy=True)
 
     def to_dict(self):
@@ -20,7 +19,6 @@ class Song(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
-    # difficulty removed to prevent database crash
     notes = db.Column(db.JSON, nullable=False) 
     scores = db.relationship('Score', backref='song_played', lazy=True)
 
@@ -49,6 +47,5 @@ class Score(db.Model):
             "score": self.score,
             "mistakes": self.mistakes,
             "played_at": self.played_at.isoformat(),
-            # This is extra handy for the frontend leaderboard!
             "username": self.player.username 
         }

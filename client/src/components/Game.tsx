@@ -45,7 +45,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
   const [processedNotes, setProcessedNotes] = useState<Set<number>>(new Set());
 
   // ANIMATION REFS
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number>(0);
   const startTimeRef = useRef<number>(0);
 
   // 1. GAME LOOP

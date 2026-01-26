@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from .db import db, migrate
 from .routes.song_routes import songs_bp
-from .routes.score_routes import scores_bp # <--- Import both
+from .routes.score_routes import scores_bp 
 import os
 from dotenv import load_dotenv
 
@@ -24,8 +24,6 @@ def create_app(config=None):
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # --- CENTRALIZED ROUTING ---
-    # We apply /api to everything here. Consistent and Clean.
     app.register_blueprint(songs_bp, url_prefix='/api')
     app.register_blueprint(scores_bp, url_prefix='/api')
     
