@@ -19,6 +19,7 @@ class Song(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
+    difficulty = db.Column(db.String(20), default="Medium")
     notes = db.Column(db.JSON, nullable=False) 
     scores = db.relationship('Score', backref='song_played', lazy=True)
 
@@ -26,6 +27,7 @@ class Song(db.Model):
         return {
             "id": self.id,
             "title": self.title,
+            'difficulty': self.difficulty,
             "notes": self.notes
         }
 
