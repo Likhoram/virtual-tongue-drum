@@ -1,96 +1,146 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import "./App.css";
+import { useState, useEffect, useCallback } from "react";
 import Home from "./components/Home";
 import Game from "./components/Game";
-import ResultModal from "./components/ResultModal";
-import type { Song } from "./types";
+import Result from "./components/Result";
+import type { Song, Score as ScoreType } from "./types";
 
-const App = () => {
-  // State
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+// The different states your app can be in
+type AppState = "HOME" | "GAME" | "RESULT";
+
+function App() {
+  // Add 'copyright' to the state so we can pass it to Home
+  const [copyrightText] = useState("copyright Wenxin Li");
+  const [appState, setAppState] = useState<AppState>("HOME");
   const [songs, setSongs] = useState<Song[]>([]);
-  const [screen, setScreen] = useState<"home" | "game" | "result">("home");
+
+  // Game Session Data
   const [currentUser, setCurrentUser] = useState("");
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [lastResult, setLastResult] = useState({ score: 0, mistakes: 0 });
+  const [lastScore, setLastScore] = useState<{
+    score: number;
+    mistakes: number;
+  } | null>(null);
+  const [newRank, setNewRank] = useState<number | null>(null);
 
-  // Fetch Songs Logic
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
+  // Fetch songs on load
   useEffect(() => {
-    axios
-      .get(`${API_URL}/api/songs`)
-      .then((res) => setSongs(res.data))
-      .catch((err) => console.error("API Error:", err));
-  }, [API_URL]);
+    fetch(`${API_URL}/songs`)
+      .then((res) => res.json())
+      .then(setSongs)
+      .catch(console.error);
+  }, []);
 
-  // Navigation Logic
-  const startGame = (user: string, songId: number) => {
+  // --- Navigation Handlers ---
+
+  const handleStartGame = (username: string, songId: number) => {
     const song = songs.find((s) => s.id === songId);
     if (song) {
-      setCurrentUser(user);
+      setCurrentUser(username);
       setCurrentSong(song);
-      setScreen("game");
+      setAppState("GAME");
     }
   };
 
-  const endGame = (score: number, mistakes: number) => {
-    setLastResult({ score, mistakes });
+  const handleGameEnd = useCallback(
+    async (score: number, mistakes: number) => {
+      if (!currentSong || !currentUser) return;
 
-    // Save to Database
-    if (currentSong) {
-      axios
-        .post(`${API_URL}/api/scores`, {
-          username: currentUser,
-          song_id: currentSong.id,
-          score: score,
-          mistakes: mistakes,
-        })
-        .catch((err) => console.error("Could not save score:", err));
-    }
+      setLastScore({ score, mistakes });
 
-    setScreen("result");
+      // 1. Post the score to the backend
+      try {
+        await fetch(`${API_URL}/scores`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: currentUser,
+            song_id: currentSong.id,
+            score: score,
+            mistakes: mistakes,
+          }),
+        });
+
+        // 2. Fetch leaderboard to determine rank
+        const res = await fetch(`${API_URL}/scores`);
+        const allScores: ScoreType[] = await res.json();
+
+        // Filter for current song and sort descending
+        const songScores = allScores
+          .filter((s) => s.song_id === currentSong.id)
+          .sort((a, b) => b.score - a.score);
+
+        // Find the index of our new score (it will be the first one that matches)
+        const rankIndex = songScores.findIndex(
+          (s) =>
+            s.username === currentUser &&
+            s.score === score &&
+            s.mistakes === mistakes,
+        );
+
+        setNewRank(rankIndex + 1);
+      } catch (err) {
+        console.error("Failed to submit score:", err);
+        setNewRank(null); // Wouldn't show a rank on error
+      }
+
+      setAppState("RESULT");
+    },
+    [currentSong, currentUser],
+  );
+
+  const goHome = () => {
+    setAppState("HOME");
+    setLastScore(null);
+    setNewRank(null);
   };
+
+  const replay = () => {
+    setAppState("GAME");
+    setLastScore(null);
+    setNewRank(null);
+  };
+
+  // --- Render Logic ---
 
   return (
     <div
-      id="App"
-      style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px" }}
+      style={{
+        height: "100vh",
+        width: "100vw",
+        overflow: "hidden",
+        background: "#0f172a",
+        color: "white",
+      }}
     >
-      {/* Header */}
-      <header
-        style={{ textAlign: "center", marginBottom: "40px", marginTop: "20px" }}
-      >
-        <h1
-          style={{
-            fontSize: "3rem",
-            margin: 0,
-            letterSpacing: "-2px",
-            background: "linear-gradient(to right, #818cf8, #c084fc)",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-          }}
-        >
-          🎵 Virtual Tongue Drum
-        </h1>
-      </header>
-
-      {/* Screen Switching */}
-      {screen === "home" && <Home songs={songs} onStart={startGame} />}
-
-      {screen === "game" && currentSong && (
-        <Game song={currentSong} user={currentUser} onEnd={endGame} />
+      {appState === "HOME" && (
+        <Home
+          songs={songs}
+          onStart={handleStartGame}
+          copyright={copyrightText}
+        />
       )}
 
-      {screen === "result" && (
-        <ResultModal
-          score={lastResult.score}
-          mistakes={lastResult.mistakes}
-          onHome={() => setScreen("home")}
+      {/* Game is visible during GAME and RESULT states */}
+      {(appState === "GAME" || appState === "RESULT") && currentSong && (
+        <Game song={currentSong} user={currentUser} onEnd={handleGameEnd} />
+      )}
+
+      {/* Result pop-up overlays the Game */}
+      {appState === "RESULT" && lastScore && currentSong && (
+        <Result
+          songName={currentSong.title}
+          score={lastScore.score}
+          mistakes={lastScore.mistakes}
+          rank={newRank}
+          onReplay={replay}
+          onPickSong={goHome}
+          onHome={goHome}
         />
       )}
     </div>
   );
-};
+}
 
 export default App;
