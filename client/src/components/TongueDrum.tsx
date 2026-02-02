@@ -1,22 +1,18 @@
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo, useCallback, useState } from "react";
 import { playSound } from "../audio/synth";
 
-// --- SVG PATH DEFINITIONS ---
-// A generic leaf shape path defined around a 0,0 center point.
-// We will rotate and translate this for each tongue.
+// --- SVG PATHS ---
 const TONGUE_PATH =
   "M 0,-70 C -30,-50 -40,-20 -30,0 C -20,20 -10,40 0,60 C 10,40 20,20 30,0 C 40,-20 30,-50 0,-70 Z";
-
-// The decorative center piece from your image
 const CENTER_PATH =
-  "M 0,-35 C -10,-35 -20,-25 -20,-15 C -25,-15 -35,-10 -35,0 C -35,10 -25,15 -20,15 C -20,25 -10,35 0,35 C 10,35 20,25 20,15 C 25,15 35,10 35,0 C 35,-10 25,-15 20,-15 C 20,-25 10,-35 0,-35 Z";
+  "M 0,-35 C -15,-35 -25,-25 -25,-10 C -35,-10 -40,0 -35,10 C -35,25 -25,35 0,35 C 25,35 35,25 35,10 C 40,0 35,-10 25,-10 C 25,-25 15,-35 0,-35 Z";
 
 interface Pad {
   id: number;
   note: string;
   key: string;
-  label: string;
-  rotation: number; // Position around the circle (degrees)
+  rotation: number; // Position in degrees
+  scale: number; // Size of the tongue (1.0 = standard)
   color: string;
 }
 
@@ -26,104 +22,110 @@ interface DrumProps {
 }
 
 const TongueDrum = ({ onHit, activeNote }: DrumProps) => {
-  // We arrange 11 notes around a circle.
-  // We skip the bottom-most position (180 degrees) for visual balance, similar to the image.
+  const [showNotes, setShowNotes] = useState(false);
+
   const pads: Pad[] = useMemo(
     () => [
-      // Top Center
+      // --- THE OUTER RING (Shifted ~15 degrees Clockwise) ---
+
+      // 1. Top (Low Note - Big)
       {
-        id: 4,
-        note: "C4",
-        key: "d",
-        label: "D",
-        rotation: 0,
+        id: 1,
+        note: "B3",
+        key: "y",
+        rotation: 15,
+        scale: 1.2,
         color: "#60a5fa",
       },
-      // Right Side going down
+
+      // 2. Going Right (Getting Higher/Smaller)
       {
-        id: 5,
-        note: "D4",
-        key: "k",
-        label: "K",
-        rotation: 30,
+        id: 2,
+        note: "B4",
+        key: "k", // Changed from 'u'
+        rotation: 51,
+        scale: 0.85,
         color: "#f472b6",
       },
       {
+        id: 3,
+        note: "G4",
+        key: "j", // Changed from 'k'
+        rotation: 87,
+        scale: 0.9,
+        color: "#f472b6",
+      },
+      {
+        id: 4,
+        note: "E4",
+        key: "n", // Changed from 'j'
+        rotation: 123,
+        scale: 1.0,
+        color: "#f472b6",
+      },
+      {
+        id: 5,
+        note: "C4",
+        key: "b", // Changed from 'n'
+        rotation: 159,
+        scale: 1.1,
+        color: "#f472b6",
+      },
+
+      // 6. Bottom (Low Note - Big)
+      {
+        id: 6,
+        note: "A3",
+        key: "v",
+        rotation: 195,
+        scale: 1.2,
+        color: "#60a5fa",
+      },
+
+      // 7. Going Left (Medium to High)
+      {
         id: 7,
+        note: "D4",
+        key: "c",
+        rotation: 231,
+        scale: 1.05,
+        color: "#f472b6",
+      },
+      {
+        id: 8,
         note: "F4",
-        key: "l",
-        label: "L",
-        rotation: 60,
+        key: "f",
+        rotation: 267,
+        scale: 0.95,
         color: "#f472b6",
       },
       {
         id: 9,
         note: "A4",
-        key: ";",
-        label: ";",
-        rotation: 90,
-        color: "#f472b6",
-      },
-      {
-        id: 11,
-        note: "C5",
-        key: "o",
-        label: "O",
-        rotation: 120,
-        color: "#f472b6",
-      },
-      {
-        id: 3,
-        note: "B3",
-        key: "j",
-        label: "J",
-        rotation: 150,
+        key: "d",
+        rotation: 303,
+        scale: 0.9,
         color: "#f472b6",
       },
 
-      // Bottom (Spacebar - largest, central)
-      // We give it a special color and position it at the bottom.
-      {
-        id: 1,
-        note: "G3",
-        key: " ",
-        label: "Space",
-        rotation: 180,
-        color: "#facc15",
-      },
-
-      // Left Side going up
-      {
-        id: 2,
-        note: "A3",
-        key: "f",
-        label: "F",
-        rotation: 210,
-        color: "#60a5fa",
-      },
+      // 10. High Note (Smallest)
       {
         id: 10,
-        note: "B4",
-        key: "w",
-        label: "W",
-        rotation: 240,
-        color: "#60a5fa",
+        note: "C5",
+        key: "r",
+        rotation: 339,
+        scale: 0.8,
+        color: "#a47adfeb",
       },
+
+      // --- CENTER (Upside Down) ---
       {
-        id: 8,
-        note: "G4",
-        key: "a",
-        label: "A",
-        rotation: 270,
-        color: "#60a5fa",
-      },
-      {
-        id: 6,
-        note: "E4",
-        key: "s",
-        label: "S",
-        rotation: 300,
-        color: "#60a5fa",
+        id: 11,
+        note: "G3",
+        key: "g",
+        rotation: 180,
+        scale: 1.6,
+        color: "#facc15",
       },
     ],
     [],
@@ -134,56 +136,48 @@ const TongueDrum = ({ onHit, activeNote }: DrumProps) => {
       playSound(pad.note);
       if (onHit) onHit(pad.note);
 
-      // Visual feedback (flash white)
+      // Visual Flash
       const element = document.getElementById(`pad-path-${pad.note}`);
       const label = document.getElementById(`pad-label-${pad.note}`);
       if (element && label) {
         element.style.fill = "#ffffff";
         element.style.filter = "drop-shadow(0 0 20px white)";
-        label.style.fill = "#000000"; // Ensure label is readable on white
+        label.style.fill = "#000000";
         setTimeout(() => {
           element.style.fill = pad.color;
           element.style.filter = "none";
-          label.style.fill = "#ffffff"; // Return label to white
+          label.style.fill = "#ffffff";
         }, 150);
       }
     },
     [onHit],
   );
 
-  // Global Keyboard Listener
+  // Keyboard Event Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // --- FIX: STOP SOUND IF TYPING IN AN INPUT ---
       const target = e.target as HTMLElement;
       if (
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.tagName === "SELECT"
-      ) {
+      )
         return;
-      }
 
       const keyStr = e.key.toLowerCase();
-      const pad = pads.find(
-        (p) => p.key === keyStr || (p.key === " " && keyStr === " "),
-      );
-
-      if (pad) {
-        handlePadHit(pad);
-      }
+      const pad = pads.find((p) => p.key === keyStr);
+      if (pad) handlePadHit(pad);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handlePadHit, pads]);
 
-  const center = 300; // Center of the new 600x600 viewBox
+  const center = 300;
 
   return (
     <div
-      className="tongue-drum-wrapper"
-      // Make wrapper flexible so it fills container
       style={{
+        position: "relative",
         width: "100%",
         height: "100%",
         display: "flex",
@@ -191,45 +185,61 @@ const TongueDrum = ({ onHit, activeNote }: DrumProps) => {
         justifyContent: "center",
       }}
     >
-      <svg
-        viewBox="0 0 600 600" // Increased viewBox for better detail
-        // Make SVG responsive and preserve aspect ratio
+      <button
+        onClick={() => setShowNotes(!showNotes)}
         style={{
-          maxWidth: "90vh", // Ensure it doesn't overflow height on wide screens
-          maxHeight: "90vw", // Ensure it doesn't overflow width on tall screens
+          position: "absolute",
+          top: "20px",
+          left: "20px",
+          background: "rgba(255,255,255,0.1)",
+          border: "1px solid rgba(255,255,255,0.3)",
+          color: "white",
+          padding: "8px 12px",
+          borderRadius: "8px",
+          cursor: "pointer",
+          fontSize: "0.8rem",
+          zIndex: 10,
+        }}
+      >
+        {showNotes ? "Show Keys" : "Show Notes"}
+      </button>
+
+      <svg
+        viewBox="0 0 600 600"
+        style={{
+          maxWidth: "90vh",
+          maxHeight: "90vw",
           width: "100%",
           height: "auto",
           filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.6))",
         }}
       >
-        {/* Main Drum Body */}
         <circle
           cx={center}
           cy={center}
           r="280"
-          fill="#1e293b"
-          stroke="#334155"
+          fill="#1b0c7685"
+          stroke="#5231d580"
           strokeWidth="8"
         />
 
-        {/* Decorative Center Piece (from image) */}
-        <g transform={`translate(${center}, ${center})`}>
-          <path d={CENTER_PATH} fill="none" stroke="#475569" strokeWidth="4" />
-        </g>
-
-        {/* The Tongues */}
         {pads.map((pad) => {
+          const isCenter = pad.note === "G3";
           const isActive = activeNote === pad.note;
-          const isSpacebar = pad.key === " ";
 
-          // Calculate position: Move to center, Rotate to angle, Move outwards by radius
-          // Spacebar is slightly larger and pushed further out
-          const radius = isSpacebar ? 190 : 180;
-          const scale = isSpacebar ? 1.3 : 1;
-          const transform = `translate(${center}, ${center}) rotate(${pad.rotation}) translate(0, -${radius}) scale(${scale})`;
+          // Transform Logic
+          let transform = "";
+          let textRotation = 0;
 
-          // Counter-rotate text so it's always upright
-          const textTransform = `rotate(${-pad.rotation})`;
+          if (isCenter) {
+            // Center is scaled by 1.6 in the config, and rotated 180
+            transform = `translate(${center}, ${center}) rotate(${pad.rotation}) scale(${pad.scale})`;
+            textRotation = -pad.rotation;
+          } else {
+            // Outer tongues: Rotate -> Move out -> Scale based on pitch
+            transform = `translate(${center}, ${center}) rotate(${pad.rotation}) translate(0, -190) scale(${pad.scale})`;
+            textRotation = -pad.rotation;
+          }
 
           return (
             <g
@@ -238,30 +248,29 @@ const TongueDrum = ({ onHit, activeNote }: DrumProps) => {
               style={{ cursor: "pointer" }}
               transform={transform}
             >
-              {/* The Leaf Shape */}
               <path
                 id={`pad-path-${pad.note}`}
-                d={TONGUE_PATH}
+                d={isCenter ? CENTER_PATH : TONGUE_PATH}
                 fill={isActive ? "#ffffff" : pad.color}
-                stroke={isActive ? "#ffffff" : "#0f172a"} // Dark outline like the image cuts
-                strokeWidth="3"
-                style={{ transition: "fill 0.1s, filter 0.1s" }}
+                stroke="#0f172a"
+                strokeWidth={isCenter ? 1.5 : 3}
+                style={{ transition: "fill 0.1s" }}
               />
 
-              {/* The Key Label */}
               <text
                 id={`pad-label-${pad.note}`}
                 x="0"
-                y="10" // Adjust vertical centering within the leaf
+                y={isCenter ? 5 : 10}
                 textAnchor="middle"
                 fill="#ffffff"
-                fontSize="24px"
+                // Adjust font size based on the tongue scale so text fits nicely
+                fontSize={isCenter ? "14px" : "24px"}
                 fontWeight="bold"
                 pointerEvents="none"
-                transform={textTransform} // Keep text upright
+                transform={`rotate(${textRotation})`}
                 style={{ textShadow: "0px 2px 4px rgba(0,0,0,0.5)" }}
               >
-                {pad.label}
+                {showNotes ? pad.note : pad.key.toUpperCase()}
               </text>
             </g>
           );

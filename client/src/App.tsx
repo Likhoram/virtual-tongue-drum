@@ -9,6 +9,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 // The different states your app can be in
 type AppState = "HOME" | "GAME" | "RESULT";
 
+// const COPYRIGHT_TEXT = "copyright Wenxin Li";
+
 function App() {
   // Add 'copyright' to the state so we can pass it to Home
   const [copyrightText] = useState("copyright Wenxin Li");

@@ -15,7 +15,6 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
     fetch(`${API_URL}/scores`)
       .then((res) => res.json())
       .then((data) => {
-        // Take top 10 scores sorted by score descending
         const sorted = data
           .sort((a: Score, b: Score) => b.score - a.score)
           .slice(0, 10);
@@ -37,10 +36,11 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
     <div style={{ marginTop: "20px", paddingBottom: "20px" }}>
       <h3
         style={{
-          color: "#94a3b8",
-          borderBottom: "1px solid #334155",
+          color: "#334155", // Dark Slate (Matches Sidebar Title)
+          borderBottom: "2px solid #e2e8f0", // Light Grey Border
           paddingBottom: "10px",
           marginBottom: "15px",
+          fontSize: "1.2rem",
         }}
       >
         🏆 High Scores
@@ -62,34 +62,50 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
         >
           <thead>
             <tr style={{ color: "#64748b", textAlign: "left" }}>
-              <th style={{ padding: "8px 4px" }}>#</th>
-              <th style={{ padding: "8px 4px" }}>User</th>
-              <th style={{ padding: "8px 4px" }}>Song</th>
-              <th style={{ padding: "8px 4px", textAlign: "right" }}>Score</th>
+              <th style={{ padding: "8px 4px", fontWeight: "600" }}>#</th>
+              <th style={{ padding: "8px 4px", fontWeight: "600" }}>User</th>
+              <th style={{ padding: "8px 4px", fontWeight: "600" }}>Song</th>
+              <th
+                style={{
+                  padding: "8px 4px",
+                  textAlign: "right",
+                  fontWeight: "600",
+                }}
+              >
+                Score
+              </th>
             </tr>
           </thead>
           <tbody>
             {scores.map((s, i) => (
-              <tr key={s.id} style={{ borderBottom: "1px solid #334155" }}>
+              <tr key={s.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                 <td
                   style={{
                     padding: "8px 4px",
-                    color: i < 3 ? "#facc15" : "#94a3b8",
+                    // Top 3 get Amber color, others get Slate
+                    color: i < 3 ? "#d97706" : "#64748b",
+                    fontWeight: i < 3 ? "bold" : "normal",
                   }}
                 >
                   {i + 1}
                 </td>
-                <td style={{ padding: "8px 4px", color: "#e2e8f0" }}>
+                <td
+                  style={{
+                    padding: "8px 4px",
+                    color: "#334155",
+                    fontWeight: "600",
+                  }}
+                >
                   {s.username}
                 </td>
-                <td style={{ padding: "8px 4px", color: "#94a3b8" }}>
+                <td style={{ padding: "8px 4px", color: "#64748b" }}>
                   {getSongName(s.song_id)}
                 </td>
                 <td
                   style={{
                     padding: "8px 4px",
                     textAlign: "right",
-                    color: "#4ade80",
+                    color: "#ffa319", // Darker Green for better contrast on white
                     fontWeight: "bold",
                   }}
                 >
