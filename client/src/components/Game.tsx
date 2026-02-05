@@ -21,15 +21,9 @@ const Game = ({ song, user, onEnd }: GameProps) => {
     }
   }, [song, isPlaying]);
 
-  // --- SCORE CALCULATOR (Accuracy Only) ---
   const calculateFinalScore = (notesHit: number) => {
     const totalNotes = song.notes.length;
-
-    // Accuracy Score: (Notes Hit - Mistakes) / Total Notes
-    // Example: 20 notes, 1 mistake. (19/20) = 95%.
     const rawScore = ((notesHit - mistakes) / totalNotes) * 100;
-
-    // Clamp to 0 (No negative scores)
     return Math.max(0, Math.round(rawScore));
   };
 
@@ -40,33 +34,26 @@ const Game = ({ song, user, onEnd }: GameProps) => {
     const targetNote = song.notes[currentIndex];
 
     if (keyClicked === targetNote.key) {
-      // CORRECT
       setActiveNote(null);
       const nextIndex = currentIndex + 1;
 
       if (nextIndex >= song.notes.length) {
-        // --- GAME FINISHED ---
-        // Pass full length because we finished the song
         const finalScore = calculateFinalScore(song.notes.length);
-
         setTimeout(() => {
           onEnd(finalScore, mistakes);
         }, 500);
       } else {
-        // Next Note
         setTimeout(() => {
           setCurrentIndex(nextIndex);
           setActiveNote(song.notes[nextIndex].key);
         }, 150);
       }
     } else {
-      // MISTAKE
       setMistakes((m) => m + 1);
     }
   };
 
   const handleQuit = () => {
-    // Quit Early: Calculate score based on progress so far
     const finalScore = calculateFinalScore(currentIndex);
     onEnd(finalScore, mistakes);
   };
@@ -94,7 +81,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
         fontFamily: "'Nunito', sans-serif",
       }}
     >
-      {/* HUD (Heads Up Display) */}
+      {/* HUD */}
       <div
         style={{
           position: "absolute",
@@ -123,7 +110,6 @@ const Game = ({ song, user, onEnd }: GameProps) => {
           {viewMode === "keys" ? "Mode: KEYS" : "Mode: NOTES"}
         </button>
 
-        {/* LIVE STATS: Notes Hit & Mistakes (No Percentage) */}
         <div
           style={{
             padding: "10px 25px",
@@ -188,7 +174,8 @@ const Game = ({ song, user, onEnd }: GameProps) => {
               marginBottom: "10px",
             }}
           >
-            Ready?
+            {/* ✅ FIXED: Now we use the 'user' variable here */}
+            Ready, {user}?
           </h1>
           <button
             onClick={() => setIsPlaying(true)}
