@@ -15,15 +15,17 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
     fetch(`${API_URL}/scores`)
       .then((res) => res.json())
       .then((data) => {
-        // Sort by Score Descending
-        const sorted = data
-          .sort((a: Score, b: Score) => b.score - a.score)
-          .slice(0, 10);
-        setScores(sorted);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch leaderboard:", err);
+        const sorted = data.sort((a: Score, b: Score) => {
+          if (b.score !== a.score) {
+            return b.score - a.score;
+          }
+
+          return (
+            new Date(b.played_at).getTime() - new Date(a.played_at).getTime()
+          );
+        });
+
+        setScores(sorted.slice(0, 10));
         setLoading(false);
       });
   }, []);

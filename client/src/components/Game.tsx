@@ -12,7 +12,6 @@ const Game = ({ song, user, onEnd }: GameProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [activeNote, setActiveNote] = useState<string | null>(null);
-
   const [viewMode, setViewMode] = useState<"keys" | "notes">("keys");
   const [mistakes, setMistakes] = useState(0);
 
@@ -22,20 +21,16 @@ const Game = ({ song, user, onEnd }: GameProps) => {
     }
   }, [song, isPlaying]);
 
-  // --- NEW SCORE CALCULATOR ---
+  // --- SCORE CALCULATOR (Accuracy Only) ---
   const calculateFinalScore = (notesHit: number) => {
-    // 1. Calculate Base Percentage (How much of the song did you finish?)
-    // e.g. 0/20 notes = 0%.   20/20 notes = 100%.
-    const progressPercent = (notesHit / song.notes.length) * 100;
+    const totalNotes = song.notes.length;
 
-    // 2. Subtract Penalty (2% per mistake)
-    const penalty = mistakes * 2;
+    // Accuracy Score: (Notes Hit - Mistakes) / Total Notes
+    // Example: 20 notes, 1 mistake. (19/20) = 95%.
+    const rawScore = ((notesHit - mistakes) / totalNotes) * 100;
 
-    // 3. Final Math
-    let finalScore = progressPercent - penalty;
-
-    // 4. Round and Clamp (Cannot be less than 0)
-    return Math.max(0, Math.round(finalScore));
+    // Clamp to 0 (No negative scores)
+    return Math.max(0, Math.round(rawScore));
   };
 
   const handleHit = (keyClicked: string) => {
@@ -51,10 +46,14 @@ const Game = ({ song, user, onEnd }: GameProps) => {
 
       if (nextIndex >= song.notes.length) {
         // --- GAME FINISHED ---
-        // You hit ALL notes, so pass 'song.notes.length' as notesHit
+        // Pass full length because we finished the song
         const finalScore = calculateFinalScore(song.notes.length);
-        setTimeout(() => onEnd(finalScore, mistakes), 500);
+
+        setTimeout(() => {
+          onEnd(finalScore, mistakes);
+        }, 500);
       } else {
+        // Next Note
         setTimeout(() => {
           setCurrentIndex(nextIndex);
           setActiveNote(song.notes[nextIndex].key);
@@ -67,8 +66,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
   };
 
   const handleQuit = () => {
-    // --- QUIT EARLY ---
-    // You only get credit for 'currentIndex' (the notes you actually hit)
+    // Quit Early: Calculate score based on progress so far
     const finalScore = calculateFinalScore(currentIndex);
     onEnd(finalScore, mistakes);
   };
@@ -96,7 +94,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
         fontFamily: "'Nunito', sans-serif",
       }}
     >
-      {/* HUD */}
+      {/* HUD (Heads Up Display) */}
       <div
         style={{
           position: "absolute",
@@ -125,6 +123,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
           {viewMode === "keys" ? "Mode: KEYS" : "Mode: NOTES"}
         </button>
 
+        {/* LIVE STATS: Notes Hit & Mistakes (No Percentage) */}
         <div
           style={{
             padding: "10px 25px",

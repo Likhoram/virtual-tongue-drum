@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app import db 
 from app.models import Score, User
+from sqlalchemy import or_, and_
 
 scores_bp = Blueprint('scores', __name__)
 
@@ -30,7 +31,15 @@ def add_score():
         db.session.add(new_score)
         db.session.commit()
 
-        higher_scores_count = Score.query.filter(Score.score > new_score.score).count()
+        higher_scores_count = Score.query.filter(
+            or_(
+                Score.score > new_score.score,
+                and_(
+                    Score.score == new_score.score,
+                    Score.played_at > new_score.played_at
+                )
+            )
+        ).count()
         
         rank = higher_scores_count + 1
 
