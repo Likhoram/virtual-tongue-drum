@@ -2,17 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import Home from "./components/Home";
 import Game from "./components/Game";
 import Result from "./components/Result";
-import type { Song, Score as ScoreType } from "./types";
+import type { Song } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
-// The different states your app can be in
 type AppState = "HOME" | "GAME" | "RESULT";
 
-// const COPYRIGHT_TEXT = "copyright Wenxin Li";
-
 function App() {
-  // Add 'copyright' to the state so we can pass it to Home
   const [copyrightText] = useState("copyright Wenxin Li");
   const [appState, setAppState] = useState<AppState>("HOME");
   const [songs, setSongs] = useState<Song[]>([]);
@@ -20,11 +16,14 @@ function App() {
   // Game Session Data
   const [currentUser, setCurrentUser] = useState("");
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [lastScore, setLastScore] = useState<{
-    score: number;
-    mistakes: number;
-  } | null>(null);
+
+  // Results
+  const [lastScore, setLastScore] = useState(0); // Percentage 0-100
+  const [lastMistakes, setLastMistakes] = useState(0);
   const [newRank, setNewRank] = useState<number | null>(null);
+
+  // Force Leaderboard refresh on Home
+  const [leaderboardKey, setLeaderboardKey] = useState(0);
 
   // Fetch songs on load
   useEffect(() => {
@@ -34,77 +33,63 @@ function App() {
       .catch(console.error);
   }, []);
 
-  // --- Navigation Handlers ---
-
   const handleStartGame = (username: string, songId: number) => {
     const song = songs.find((s) => s.id === songId);
     if (song) {
       setCurrentUser(username);
       setCurrentSong(song);
+      setNewRank(null); // Reset rank
       setAppState("GAME");
     }
   };
 
   const handleGameEnd = useCallback(
-    async (score: number, mistakes: number) => {
+    async (scorePercent: number, mistakes: number) => {
       if (!currentSong || !currentUser) return;
 
-      setLastScore({ score, mistakes });
+      setLastScore(scorePercent);
+      setLastMistakes(mistakes);
 
-      // 1. Post the score to the backend
+      // Show result screen immediately (Rank will say "..." until fetch finishes)
+      setAppState("RESULT");
+
       try {
-        await fetch(`${API_URL}/scores`, {
+        // 1. Send Score to Backend (Backend calculates GLOBAL Rank)
+        const res = await fetch(`${API_URL}/scores`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             username: currentUser,
             song_id: currentSong.id,
-            score: score,
+            score: scorePercent, // Sending Percentage
             mistakes: mistakes,
           }),
         });
 
-        // 2. Fetch leaderboard to determine rank
-        const res = await fetch(`${API_URL}/scores`);
-        const allScores: ScoreType[] = await res.json();
+        const data = await res.json();
 
-        // Filter for current song and sort descending
-        const songScores = allScores
-          .filter((s) => s.song_id === currentSong.id)
-          .sort((a, b) => b.score - a.score);
-
-        // Find the index of our new score (it will be the first one that matches)
-        const rankIndex = songScores.findIndex(
-          (s) =>
-            s.username === currentUser &&
-            s.score === score &&
-            s.mistakes === mistakes,
-        );
-
-        setNewRank(rankIndex + 1);
+        if (res.ok) {
+          setNewRank(data.rank); // <--- Set the rank from Backend
+          setLeaderboardKey((prev) => prev + 1); // Refresh Home leaderboard
+        } else {
+          console.error("Error saving score:", data.error);
+        }
       } catch (err) {
         console.error("Failed to submit score:", err);
-        setNewRank(null); // Wouldn't show a rank on error
       }
-
-      setAppState("RESULT");
     },
     [currentSong, currentUser],
   );
 
   const goHome = () => {
     setAppState("HOME");
-    setLastScore(null);
     setNewRank(null);
   };
 
   const replay = () => {
     setAppState("GAME");
-    setLastScore(null);
     setNewRank(null);
   };
-
-  // --- Render Logic ---
 
   return (
     <div
@@ -118,26 +103,27 @@ function App() {
     >
       {appState === "HOME" && (
         <Home
+          key={leaderboardKey} // Forces leaderboard refresh
           songs={songs}
           onStart={handleStartGame}
           copyright={copyrightText}
         />
       )}
 
-      {/* Game is visible during GAME and RESULT states */}
+      {/* Game is visible during GAME and RESULT (so the modal can pop over it) */}
       {(appState === "GAME" || appState === "RESULT") && currentSong && (
         <Game song={currentSong} user={currentUser} onEnd={handleGameEnd} />
       )}
 
       {/* Result pop-up overlays the Game */}
-      {appState === "RESULT" && lastScore && currentSong && (
+      {appState === "RESULT" && currentSong && (
         <Result
           songName={currentSong.title}
-          score={lastScore.score}
-          mistakes={lastScore.mistakes}
+          score={lastScore}
+          mistakes={lastMistakes}
           rank={newRank}
+          username={currentUser}
           onReplay={replay}
-          onPickSong={goHome}
           onHome={goHome}
         />
       )}

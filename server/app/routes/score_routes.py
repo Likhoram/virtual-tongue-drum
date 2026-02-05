@@ -22,15 +22,25 @@ def add_score():
     new_score = Score(
         user_id=user.id,
         song_id=data['song_id'],
-        score=data['score'],
+        score=data['score'],          
         mistakes=data.get('mistakes', 0)
     )
 
     try:
         db.session.add(new_score)
         db.session.commit()
-        return jsonify(new_score.to_dict()), 201
+
+        higher_scores_count = Score.query.filter(Score.score > new_score.score).count()
+        
+        rank = higher_scores_count + 1
+
+        response_data = new_score.to_dict()
+        response_data['rank'] = rank  
+
+        return jsonify(response_data), 201
+
     except Exception as e:
+        db.session.rollback() 
         return jsonify({"error": str(e)}), 500
 
 @scores_bp.route('/scores', methods=['GET'])

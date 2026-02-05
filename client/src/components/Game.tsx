@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import TongueDrum from "./TongueDrum";
+import { useState, useEffect } from "react";
+import TongueDrum, { DRUM_PADS } from "./TongueDrum";
 import type { Song } from "../types";
 
 interface GameProps {
@@ -8,97 +8,78 @@ interface GameProps {
   onEnd: (score: number, mistakes: number) => void;
 }
 
-// CONFIGURATION
-const SPEED = 200; // Pixels per second (Falling speed)
-const HIT_Y = 450; // The vertical pixel line where the note hits the drum
-const SPAWN_Y = -50; // Start falling from above the screen
-const HIT_WINDOW = 0.4; // Seconds allowed to hit the note (leniency)
-
-// Map Notes to Horizontal Positions (0% = Left, 100% = Right)
-// These are estimated to match your Circular Drum layout
-const NOTE_POSITIONS: Record<string, { left: string }> = {
-  // Center Notes (Top & Bottom)
-  C4: { left: "50%" },
-  G3: { left: "50%" },
-
-  // Left Side Notes
-  A3: { left: "38%" },
-  E4: { left: "20%" },
-  G4: { left: "12%" },
-  B4: { left: "28%" },
-
-  // Right Side Notes
-  D4: { left: "62%" },
-  F4: { left: "72%" },
-  A4: { left: "80%" },
-  B3: { left: "88%" },
-  C5: { left: "75%" },
-};
-
 const Game = ({ song, user, onEnd }: GameProps) => {
-  // GAME STATE
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [score, setScore] = useState(0);
-  const [combo, setCombo] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [activeNote, setActiveNote] = useState<string | null>(null);
+
+  const [viewMode, setViewMode] = useState<"keys" | "notes">("keys");
   const [mistakes, setMistakes] = useState(0);
-  const [processedNotes, setProcessedNotes] = useState<Set<number>>(new Set());
 
-  // ANIMATION REFS
-  const requestRef = useRef<number>(0);
-  const startTimeRef = useRef<number>(0);
-
-  // 1. GAME LOOP
   useEffect(() => {
+    if (song.notes.length > 0 && isPlaying) {
+      setActiveNote(song.notes[0].key);
+    }
+  }, [song, isPlaying]);
+
+  // --- NEW SCORE CALCULATOR ---
+  const calculateFinalScore = (notesHit: number) => {
+    // 1. Calculate Base Percentage (How much of the song did you finish?)
+    // e.g. 0/20 notes = 0%.   20/20 notes = 100%.
+    const progressPercent = (notesHit / song.notes.length) * 100;
+
+    // 2. Subtract Penalty (2% per mistake)
+    const penalty = mistakes * 2;
+
+    // 3. Final Math
+    let finalScore = progressPercent - penalty;
+
+    // 4. Round and Clamp (Cannot be less than 0)
+    return Math.max(0, Math.round(finalScore));
+  };
+
+  const handleHit = (keyClicked: string) => {
     if (!isPlaying) return;
+    if (currentIndex >= song.notes.length) return;
 
-    const animate = (time: number) => {
-      // Calculate time passed in seconds
-      const now = (time - startTimeRef.current) / 1000;
-      setCurrentTime(now);
+    const targetNote = song.notes[currentIndex];
 
-      // End game if song is over (buffer of 3 seconds)
-      const lastNoteTime = song.notes[song.notes.length - 1].time;
-      if (now > lastNoteTime + 3) {
-        onEnd(score, mistakes);
-        return;
+    if (keyClicked === targetNote.key) {
+      // CORRECT
+      setActiveNote(null);
+      const nextIndex = currentIndex + 1;
+
+      if (nextIndex >= song.notes.length) {
+        // --- GAME FINISHED ---
+        // You hit ALL notes, so pass 'song.notes.length' as notesHit
+        const finalScore = calculateFinalScore(song.notes.length);
+        setTimeout(() => onEnd(finalScore, mistakes), 500);
+      } else {
+        setTimeout(() => {
+          setCurrentIndex(nextIndex);
+          setActiveNote(song.notes[nextIndex].key);
+        }, 150);
       }
-
-      requestRef.current = requestAnimationFrame(animate);
-    };
-
-    requestRef.current = requestAnimationFrame((time) => {
-      startTimeRef.current = time;
-      requestAnimationFrame(animate);
-    });
-
-    return () => cancelAnimationFrame(requestRef.current!);
-  }, [isPlaying, song, onEnd, score, mistakes]);
-
-  // 2. HIT LOGIC
-  const handleHit = (noteClicked: string) => {
-    // Find a note that matches the key AND is within the time window
-    const hitCandidateIndex = song.notes.findIndex((n, idx) => {
-      if (processedNotes.has(idx)) return false; // Already hit
-      if (n.key !== noteClicked) return false; // Wrong key
-
-      const timeDiff = Math.abs(n.time - currentTime);
-      return timeDiff <= HIT_WINDOW;
-    });
-
-    if (hitCandidateIndex !== -1) {
-      // HIT!
-      setScore((s) => s + 10 + combo);
-      setCombo((c) => c + 1);
-      setProcessedNotes((prev) => new Set(prev).add(hitCandidateIndex));
     } else {
-      // MISS (Only penalize if game is playing)
-      if (isPlaying) {
-        setCombo(0);
-        setMistakes((m) => m + 1);
-      }
+      // MISTAKE
+      setMistakes((m) => m + 1);
     }
   };
+
+  const handleQuit = () => {
+    // --- QUIT EARLY ---
+    // You only get credit for 'currentIndex' (the notes you actually hit)
+    const finalScore = calculateFinalScore(currentIndex);
+    onEnd(finalScore, mistakes);
+  };
+
+  const getLabel = (key: string) => {
+    if (viewMode === "keys") return key.toUpperCase();
+    const pad = DRUM_PADS.find((p) => p.key === key);
+    return pad ? pad.note : key;
+  };
+
+  const upcomingNotes = song.notes.slice(currentIndex, currentIndex + 5);
 
   return (
     <div
@@ -106,10 +87,16 @@ const Game = ({ song, user, onEnd }: GameProps) => {
         position: "relative",
         width: "100%",
         height: "100%",
-        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        background:
+          "radial-gradient(circle at center, rgb(246, 191, 80) 0%, #ef8af2cf 100%)",
+        fontFamily: "'Nunito', sans-serif",
       }}
     >
-      {/* HUD (Heads Up Display) */}
+      {/* HUD */}
       <div
         style={{
           position: "absolute",
@@ -118,22 +105,62 @@ const Game = ({ song, user, onEnd }: GameProps) => {
           right: "20px",
           display: "flex",
           justifyContent: "space-between",
-          padding: "10px 20px",
-          background: "rgba(0,0,0,0.6)",
-          borderRadius: "12px",
-          color: "white",
-          zIndex: 20,
+          alignItems: "center",
+          zIndex: 50,
         }}
       >
-        <span>
-          User: <b>{user}</b>
-        </span>
-        <span>
-          Score: <b style={{ color: "#4ade80" }}>{score}</b>
-        </span>
-        <span>
-          Combo: <b style={{ color: "#facc15" }}>x{combo}</b>
-        </span>
+        <button
+          onClick={() => setViewMode(viewMode === "keys" ? "notes" : "keys")}
+          style={{
+            background: "rgba(255,255,255,0.3)",
+            border: "2px solid white",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "12px",
+            cursor: "pointer",
+            fontWeight: "bold",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+          }}
+        >
+          {viewMode === "keys" ? "Mode: KEYS" : "Mode: NOTES"}
+        </button>
+
+        <div
+          style={{
+            padding: "10px 25px",
+            background: "white",
+            borderRadius: "12px",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+            display: "flex",
+            gap: "25px",
+            fontWeight: "800",
+            color: "#334155",
+            fontSize: "1.1rem",
+          }}
+        >
+          <span>
+            🎵 {currentIndex} / {song.notes.length}
+          </span>
+          <span style={{ color: mistakes > 0 ? "#ef4444" : "#cbd5e1" }}>
+            ❌ {mistakes}
+          </span>
+        </div>
+
+        <button
+          onClick={handleQuit}
+          style={{
+            background: "#ef4444",
+            color: "white",
+            border: "none",
+            padding: "10px 20px",
+            borderRadius: "12px",
+            fontWeight: "bold",
+            cursor: "pointer",
+            boxShadow: "0 4px 10px rgba(220, 38, 38, 0.3)",
+          }}
+        >
+          Quit
+        </button>
       </div>
 
       {/* START OVERLAY */}
@@ -145,8 +172,9 @@ const Game = ({ song, user, onEnd }: GameProps) => {
             left: 0,
             right: 0,
             bottom: 0,
-            background: "rgba(0,0,0,0.7)",
-            zIndex: 30,
+            background: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(5px)",
+            zIndex: 100,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -154,7 +182,12 @@ const Game = ({ song, user, onEnd }: GameProps) => {
           }}
         >
           <h1
-            style={{ color: "#facc15", fontSize: "3rem", marginBottom: "20px" }}
+            style={{
+              fontSize: "3rem",
+              color: "white",
+              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
+              marginBottom: "10px",
+            }}
           >
             Ready?
           </h1>
@@ -162,99 +195,75 @@ const Game = ({ song, user, onEnd }: GameProps) => {
             onClick={() => setIsPlaying(true)}
             style={{
               padding: "20px 60px",
-              fontSize: "1.5rem",
-              background: "#facc15",
-              color: "#0f172a",
-              border: "none",
+              fontSize: "2rem",
               borderRadius: "50px",
+              border: "none",
+              background: "#f59e0b",
+              color: "white",
+              fontWeight: "800",
               cursor: "pointer",
-              fontWeight: "bold",
-              boxShadow: "0 0 20px #facc15",
+              boxShadow: "0 10px 20px rgba(245, 158, 11, 0.4)",
+              transition: "transform 0.2s",
             }}
           >
-            START
+            PLAY
           </button>
         </div>
       )}
 
-      {/* FALLING NOTES LAYER */}
+      {/* BUBBLES */}
       <div
         style={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: "none",
+          top: "100px",
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          gap: "15px",
           zIndex: 10,
+          opacity: isPlaying ? 1 : 0.3,
         }}
       >
-        {/* The Hit Line (Visual Guide) */}
-        <div
-          style={{
-            position: "absolute",
-            top: `${HIT_Y}px`,
-            left: "10%",
-            right: "10%",
-            height: "2px",
-            background:
-              "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
-          }}
-        />
-
-        {song.notes.map((note, idx) => {
-          // Calculate Y position based on time difference
-          const timeUntilHit = note.time - currentTime;
-          const yPos = HIT_Y - timeUntilHit * SPEED;
-
-          // Render only if visible
-          if (yPos < SPAWN_Y || yPos > HIT_Y + 100) return null;
-          if (processedNotes.has(idx)) return null;
-
-          const xPos = NOTE_POSITIONS[note.key]?.left || "50%";
-
-          return (
-            <div
-              key={idx}
-              style={{
-                position: "absolute",
-                left: xPos,
-                top: `${yPos}px`,
-                width: "40px",
-                height: "40px",
-                background: "#facc15",
-                borderRadius: "50%",
-                transform: "translate(-50%, -50%)",
-                boxShadow: "0 0 15px #facc15",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                color: "black",
-                fontSize: "0.9rem",
-              }}
-            >
-              {note.key}
-            </div>
-          );
-        })}
+        {upcomingNotes.map((note, idx) => (
+          <div
+            key={`${currentIndex}-${idx}`}
+            style={{
+              width: idx === 0 ? "65px" : "45px",
+              height: idx === 0 ? "65px" : "45px",
+              borderRadius: "50%",
+              background: idx === 0 ? "#facc15" : "rgba(255,255,255,0.6)",
+              border: "4px solid white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              fontSize: idx === 0 ? "1.4rem" : "0.9rem",
+              color: "#334155",
+              boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+              transform: idx === 0 ? "scale(1.1)" : "scale(1)",
+              transition: "all 0.2s",
+            }}
+          >
+            {getLabel(note.key)}
+          </div>
+        ))}
       </div>
 
-      {/* DRUM LAYER (Center Screen) */}
+      {/* DRUM */}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: "100%",
+          maxWidth: "800px",
+          marginTop: "80px",
           zIndex: 5,
         }}
       >
-        <TongueDrum onHit={handleHit} />
+        <TongueDrum
+          onHit={handleHit}
+          activeNote={isPlaying ? activeNote : null}
+          forcedView={viewMode}
+          hideToggleButton={true}
+        />
       </div>
     </div>
   );

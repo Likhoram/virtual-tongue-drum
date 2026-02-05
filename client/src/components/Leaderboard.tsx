@@ -15,6 +15,7 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
     fetch(`${API_URL}/scores`)
       .then((res) => res.json())
       .then((data) => {
+        // Sort by Score Descending
         const sorted = data
           .sort((a: Score, b: Score) => b.score - a.score)
           .slice(0, 10);
@@ -36,8 +37,8 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
     <div style={{ marginTop: "20px", paddingBottom: "20px" }}>
       <h3
         style={{
-          color: "#334155", // Dark Slate (Matches Sidebar Title)
-          borderBottom: "2px solid #e2e8f0", // Light Grey Border
+          color: "#334155",
+          borderBottom: "2px solid #e2e8f0",
           paddingBottom: "10px",
           marginBottom: "15px",
           fontSize: "1.2rem",
@@ -82,7 +83,6 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
                 <td
                   style={{
                     padding: "8px 4px",
-                    // Top 3 get Amber color, others get Slate
                     color: i < 3 ? "#d97706" : "#64748b",
                     fontWeight: i < 3 ? "bold" : "normal",
                   }}
@@ -105,11 +105,11 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
                   style={{
                     padding: "8px 4px",
                     textAlign: "right",
-                    color: "#ffa319", // Darker Green for better contrast on white
+                    color: "#16a34a",
                     fontWeight: "bold",
                   }}
                 >
-                  {s.score}
+                  {s.score}% {/* <--- ADDED PERCENTAGE SIGN HERE */}
                 </td>
               </tr>
             ))}
