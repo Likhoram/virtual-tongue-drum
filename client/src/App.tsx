@@ -9,7 +9,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 type AppState = "HOME" | "GAME" | "RESULT";
 
 function App() {
-  const [copyrightText] = useState("copyright Wenxin Li");
   const [appState, setAppState] = useState<AppState>("HOME");
   const [songs, setSongs] = useState<Song[]>([]);
 
@@ -94,11 +93,8 @@ function App() {
   return (
     <div
       style={{
-        height: "100vh",
-        width: "100vw",
-        overflow: "hidden",
-        background: "#0f172a",
-        color: "white",
+        height: "100%",
+        width: "100%",
       }}
     >
       {appState === "HOME" && (
@@ -106,7 +102,6 @@ function App() {
           key={leaderboardKey} // Forces leaderboard refresh
           songs={songs}
           onStart={handleStartGame}
-          copyright={copyrightText}
         />
       )}
 

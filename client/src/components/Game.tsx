@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import TongueDrum, { DRUM_PADS } from "./TongueDrum";
+import { useState } from "react";
+import TongueDrum from "./TongueDrum";
+import { DRUM_PADS } from "../data/drumData";
 import type { Song } from "../types";
 
 interface GameProps {
@@ -14,12 +15,6 @@ const Game = ({ song, user, onEnd }: GameProps) => {
   const [activeNote, setActiveNote] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"keys" | "notes">("keys");
   const [mistakes, setMistakes] = useState(0);
-
-  useEffect(() => {
-    if (song.notes.length > 0 && isPlaying) {
-      setActiveNote(song.notes[0].key);
-    }
-  }, [song, isPlaying]);
 
   const calculateFinalScore = (notesHit: number) => {
     const totalNotes = song.notes.length;
@@ -78,7 +73,6 @@ const Game = ({ song, user, onEnd }: GameProps) => {
         justifyContent: "center",
         background:
           "radial-gradient(circle at center, rgb(246, 191, 80) 0%, #ef8af2cf 100%)",
-        fontFamily: "'Nunito', sans-serif",
       }}
     >
       {/* HUD */}
@@ -88,64 +82,105 @@ const Game = ({ song, user, onEnd }: GameProps) => {
           top: "20px",
           left: "20px",
           right: "20px",
+          height: "50px",
           display: "flex",
-          justifyContent: "space-between",
           alignItems: "center",
+          justifyContent: "space-between",
           zIndex: 50,
+          pointerEvents: "none",
         }}
       >
-        <button
-          onClick={() => setViewMode(viewMode === "keys" ? "notes" : "keys")}
-          style={{
-            background: "rgba(255,255,255,0.3)",
-            border: "2px solid white",
-            color: "white",
-            padding: "10px 20px",
-            borderRadius: "12px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-          }}
-        >
-          {viewMode === "keys" ? "Mode: KEYS" : "Mode: NOTES"}
-        </button>
-
-        <div
-          style={{
-            padding: "10px 25px",
-            background: "white",
-            borderRadius: "12px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-            display: "flex",
-            gap: "25px",
-            fontWeight: "800",
-            color: "#334155",
-            fontSize: "1.1rem",
-          }}
-        >
-          <span>
-            🎵 {currentIndex} / {song.notes.length}
-          </span>
-          <span style={{ color: mistakes > 0 ? "#ef4444" : "#cbd5e1" }}>
-            ❌ {mistakes}
-          </span>
+        {/* LEFT: Mode Toggle */}
+        <div style={{ pointerEvents: "auto" }}>
+          <button
+            onClick={() => setViewMode(viewMode === "keys" ? "notes" : "keys")}
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(4px)",
+              border: "1px solid rgba(255, 255, 255, 0.4)",
+              color: "white",
+              padding: "10px 16px",
+              borderRadius: "12px",
+              cursor: "pointer",
+              fontWeight: "700",
+              fontSize: "0.9rem",
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+            }}
+          >
+            {viewMode === "keys" ? "Show Notes" : "Show Keys"}
+          </button>
         </div>
 
-        <button
-          onClick={handleQuit}
+        {/* CENTER: The Single Stats Box */}
+        <div
           style={{
-            background: "#ef4444",
-            color: "white",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "12px",
-            fontWeight: "bold",
-            cursor: "pointer",
-            boxShadow: "0 4px 10px rgba(220, 38, 38, 0.3)",
+            position: "absolute",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "white",
+            padding: "10px 25px",
+            borderRadius: "30px",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
+            display: "flex",
+            alignItems: "center",
+            gap: "20px",
+            pointerEvents: "auto",
+            minWidth: "200px",
+            justifyContent: "center",
           }}
         >
-          Quit
-        </button>
+          {/* Notes Section */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              color: "#334155",
+              fontWeight: "800",
+              fontSize: "1.2rem",
+            }}
+          >
+            <span style={{ fontSize: "1.2rem" }}>🎵</span>
+            <span>
+              {currentIndex} / {song.notes.length}
+            </span>
+          </div>
+
+          {/* Mistakes Section */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              color: mistakes > 0 ? "#ef4444" : "#334155",
+              fontWeight: "800",
+              fontSize: "1.2rem",
+            }}
+          >
+            <span style={{ fontSize: "1.1rem" }}>❌</span>
+            <span>{mistakes}</span>
+          </div>
+        </div>
+
+        {/* RIGHT: Quit Button */}
+        <div style={{ pointerEvents: "auto" }}>
+          <button
+            onClick={handleQuit}
+            style={{
+              background: "#ef4444",
+              color: "white",
+              border: "none",
+              padding: "10px 20px",
+              borderRadius: "12px",
+              fontWeight: "700",
+              fontSize: "0.9rem",
+              cursor: "pointer",
+              boxShadow: "0 4px 6px rgba(220, 38, 38, 0.3)",
+            }}
+          >
+            QUIT
+          </button>
+        </div>
       </div>
 
       {/* START OVERLAY */}
@@ -174,11 +209,29 @@ const Game = ({ song, user, onEnd }: GameProps) => {
               marginBottom: "10px",
             }}
           >
-            {/* ✅ FIXED: Now we use the 'user' variable here */}
             Ready, {user}?
           </h1>
+          <p
+            style={{
+              color: "#ffffff",
+              fontSize: "1.5rem",
+              fontStyle: "italic",
+              margin: "0 0 30px 0",
+              maxWidth: "600px",
+            }}
+          >
+            Hit the highlighted keys on the drum to play the song!
+          </p>
+
           <button
-            onClick={() => setIsPlaying(true)}
+            onClick={() => {
+              setIsPlaying(true);
+              setCurrentIndex(0);
+              setMistakes(0);
+              if (song.notes.length > 0) {
+                setActiveNote(song.notes[0].key);
+              }
+            }}
             style={{
               padding: "20px 60px",
               fontSize: "2rem",
@@ -191,6 +244,10 @@ const Game = ({ song, user, onEnd }: GameProps) => {
               boxShadow: "0 10px 20px rgba(245, 158, 11, 0.4)",
               transition: "transform 0.2s",
             }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.transform = "scale(1.05)")
+            }
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
             PLAY
           </button>
@@ -239,7 +296,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
       <div
         style={{
           width: "100%",
-          maxWidth: "800px",
+          maxWidth: "700px",
           marginTop: "80px",
           zIndex: 5,
         }}

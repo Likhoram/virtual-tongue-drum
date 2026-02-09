@@ -1,31 +1,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { playSound } from "../audio/synth";
+import { DRUM_PADS, type Pad } from "../data/drumData";
 
-// --- EXPORTED CONFIGURATION ---
-export interface Pad {
-  id: number;
-  note: string;
-  key: string;
-  rotation: number;
-  scale: number;
-  color: string;
-}
-
-export const DRUM_PADS: Pad[] = [
-  { id: 1, note: "B3", key: "y", rotation: 15, scale: 1.2, color: "#60a5fa" },
-  { id: 2, note: "B4", key: "k", rotation: 51, scale: 0.85, color: "#f472b6" },
-  { id: 3, note: "G4", key: "j", rotation: 87, scale: 0.9, color: "#f472b6" },
-  { id: 4, note: "E4", key: "n", rotation: 123, scale: 1.0, color: "#f472b6" },
-  { id: 5, note: "C4", key: "b", rotation: 159, scale: 1.1, color: "#f472b6" },
-  { id: 6, note: "A3", key: "v", rotation: 195, scale: 1.2, color: "#60a5fa" },
-  { id: 7, note: "D4", key: "c", rotation: 231, scale: 1.05, color: "#f472b6" },
-  { id: 8, note: "F4", key: "f", rotation: 267, scale: 0.95, color: "#f472b6" },
-  { id: 9, note: "A4", key: "d", rotation: 303, scale: 0.9, color: "#f472b6" },
-  { id: 10, note: "C5", key: "r", rotation: 339, scale: 0.8, color: "#f472b6" },
-  { id: 11, note: "G3", key: "g", rotation: 180, scale: 1.6, color: "#facc15" },
-];
-
-// --- SVG PATHS ---
 const TONGUE_PATH =
   "M 0,-70 C -30,-50 -40,-20 -30,0 C -20,20 -10,40 0,60 C 10,40 20,20 30,0 C 40,-20 30,-50 0,-70 Z";
 const CENTER_PATH =
@@ -53,20 +29,15 @@ const TongueDrum = ({
       playSound(pad.note);
       if (onHit) onHit(pad.note);
 
-      // Visual Flash Effect on Click
       const element = document.getElementById(`pad-path-${pad.note}`);
       const label = document.getElementById(`pad-label-${pad.note}`);
       if (element && label) {
-        // Flash White
         element.style.fill = "#ffffff";
         element.style.filter = "drop-shadow(0 0 20px white)";
         label.style.fill = "#000000";
 
-        // Revert to normal after 150ms
         setTimeout(() => {
-          // Note: The Game component might keep it white if it's still the active note.
-          // This creates a nice "flash" even if it stays active.
-          element.style.fill = ""; // Clear inline style so it falls back to props
+          element.style.fill = "";
           element.style.filter = "none";
           label.style.fill = "#ffffff";
         }, 150);
@@ -149,8 +120,6 @@ const TongueDrum = ({
         {DRUM_PADS.map((pad) => {
           const isCenter = pad.note === "G3";
 
-          // --- THE FIX ---
-          // Compare Song Note ("C4") with Pad Note ("C4")
           const isActive = activeNote === pad.note;
 
           let transform = "";
@@ -174,7 +143,6 @@ const TongueDrum = ({
               <path
                 id={`pad-path-${pad.note}`}
                 d={isCenter ? CENTER_PATH : TONGUE_PATH}
-                // If active (from Game) OR flashed (from Click), it becomes white
                 fill={isActive ? "#ffffff" : pad.color}
                 stroke="#0f172a"
                 strokeWidth={isCenter ? 1.5 : 3}

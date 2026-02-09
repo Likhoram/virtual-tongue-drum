@@ -107,11 +107,11 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
                   style={{
                     padding: "8px 4px",
                     textAlign: "right",
-                    color: "#16a34a",
+                    color: "#ed8e0a",
                     fontWeight: "bold",
                   }}
                 >
-                  {s.score}% {/* <--- ADDED PERCENTAGE SIGN HERE */}
+                  {s.score}%
                 </td>
               </tr>
             ))}
