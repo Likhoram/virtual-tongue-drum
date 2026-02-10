@@ -1,0 +1,27 @@
+.home {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.home__panel {
+  flex: 1;
+  position: relative;
+  height: 100%;
+}
+
+.home__menu-button {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  z-index: 100;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 2.2rem;
+  color: #fbfdff;
+  padding: 0;
+  line-height: 1;
+}

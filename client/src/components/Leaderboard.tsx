@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Song, Score } from "../types";
+import "./Leaderboard.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
@@ -36,83 +37,40 @@ const Leaderboard = ({ songs }: LeaderboardProps) => {
   };
 
   return (
-    <div style={{ marginTop: "20px", paddingBottom: "20px" }}>
-      <h3
-        style={{
-          color: "#334155",
-          borderBottom: "2px solid #e2e8f0",
-          paddingBottom: "10px",
-          marginBottom: "15px",
-          fontSize: "1.2rem",
-        }}
-      >
-        🏆 High Scores
-      </h3>
+    <div className="leaderboard">
+      <h3 className="leaderboard__title">🏆 High Scores</h3>
 
       {loading ? (
-        <p style={{ color: "#64748b" }}>Loading...</p>
+        <p className="leaderboard__text">Loading...</p>
       ) : scores.length === 0 ? (
-        <p style={{ color: "#64748b", fontStyle: "italic" }}>
+        <p className="leaderboard__text leaderboard__text--italic">
           No scores yet. Be the first!
         </p>
       ) : (
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "0.9rem",
-          }}
-        >
+        <table className="leaderboard__table">
           <thead>
-            <tr style={{ color: "#64748b", textAlign: "left" }}>
-              <th style={{ padding: "8px 4px", fontWeight: "600" }}>#</th>
-              <th style={{ padding: "8px 4px", fontWeight: "600" }}>User</th>
-              <th style={{ padding: "8px 4px", fontWeight: "600" }}>Song</th>
-              <th
-                style={{
-                  padding: "8px 4px",
-                  textAlign: "right",
-                  fontWeight: "600",
-                }}
-              >
+            <tr className="leaderboard__head-row">
+              <th className="leaderboard__head-cell">#</th>
+              <th className="leaderboard__head-cell">User</th>
+              <th className="leaderboard__head-cell">Song</th>
+              <th className="leaderboard__head-cell leaderboard__head-cell--right">
                 Score
               </th>
             </tr>
           </thead>
           <tbody>
             {scores.map((s, i) => (
-              <tr key={s.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+              <tr key={s.id} className="leaderboard__row">
                 <td
-                  style={{
-                    padding: "8px 4px",
-                    color: i < 3 ? "#d97706" : "#64748b",
-                    fontWeight: i < 3 ? "bold" : "normal",
-                  }}
+                  className={`leaderboard__rank${
+                    i < 3 ? " leaderboard__rank--top" : ""
+                  }`}
                 >
                   {i + 1}
                 </td>
-                <td
-                  style={{
-                    padding: "8px 4px",
-                    color: "#334155",
-                    fontWeight: "600",
-                  }}
-                >
-                  {s.username}
-                </td>
-                <td style={{ padding: "8px 4px", color: "#64748b" }}>
-                  {getSongName(s.song_id)}
-                </td>
-                <td
-                  style={{
-                    padding: "8px 4px",
-                    textAlign: "right",
-                    color: "#ed8e0a",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {s.score}%
-                </td>
+                <td className="leaderboard__user">{s.username}</td>
+                <td className="leaderboard__song">{getSongName(s.song_id)}</td>
+                <td className="leaderboard__score">{s.score}%</td>
               </tr>
             ))}
           </tbody>

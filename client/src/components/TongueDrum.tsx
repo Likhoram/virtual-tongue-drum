@@ -1,6 +1,7 @@
 import { useEffect, useCallback, useState } from "react";
 import { playSound } from "../audio/synth";
 import { DRUM_PADS, type Pad } from "../data/drumData";
+import "./TongueDrum.css";
 
 const TONGUE_PATH =
   "M 0,-70 C -30,-50 -40,-20 -30,0 C -20,20 -10,40 0,60 C 10,40 20,20 30,0 C 40,-20 30,-50 0,-70 Z";
@@ -67,47 +68,17 @@ const TongueDrum = ({
   const center = 300;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
+    <div className="tongue-drum">
       {!hideToggleButton && (
         <button
           onClick={() => setInternalShowNotes(!internalShowNotes)}
-          style={{
-            position: "absolute",
-            top: "20px",
-            left: "20px",
-            background: "rgba(255,255,255,0.1)",
-            border: "1px solid rgba(255,255,255,0.3)",
-            color: "white",
-            padding: "8px 12px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontSize: "0.8rem",
-            zIndex: 10,
-          }}
+          className="tongue-drum__toggle"
         >
           {showNotes ? "Show Keys" : "Show Notes"}
         </button>
       )}
 
-      <svg
-        viewBox="0 0 600 600"
-        style={{
-          maxWidth: "90vh",
-          maxHeight: "90vw",
-          width: "100%",
-          height: "auto",
-          filter: "drop-shadow(0 20px 40px rgba(0,0,0,0.6))",
-        }}
-      >
+      <svg viewBox="0 0 600 600" className="tongue-drum__svg">
         <circle
           cx={center}
           cy={center}
@@ -115,6 +86,7 @@ const TongueDrum = ({
           fill="#1e293b"
           stroke="#334155"
           strokeWidth="8"
+          className="tongue-drum__base"
         />
 
         {DRUM_PADS.map((pad) => {
@@ -137,7 +109,7 @@ const TongueDrum = ({
             <g
               key={pad.id}
               onClick={() => handlePadHit(pad)}
-              style={{ cursor: "pointer" }}
+              className="tongue-drum__pad"
               transform={transform}
             >
               <path
@@ -146,19 +118,16 @@ const TongueDrum = ({
                 fill={isActive ? "#ffffff" : pad.color}
                 stroke="#0f172a"
                 strokeWidth={isCenter ? 1.5 : 3}
-                style={{ transition: "fill 0.1s" }}
+                className="tongue-drum__pad-path"
               />
               <text
                 id={`pad-label-${pad.note}`}
                 x="0"
                 y={isCenter ? 5 : 10}
                 textAnchor="middle"
-                fill="#ffffff"
                 fontSize={isCenter ? "14px" : "24px"}
-                fontWeight="bold"
-                pointerEvents="none"
                 transform={`rotate(${textRotation})`}
-                style={{ textShadow: "0px 2px 4px rgba(0,0,0,0.5)" }}
+                className="tongue-drum__pad-label"
               >
                 {showNotes ? pad.note : pad.key.toUpperCase()}
               </text>

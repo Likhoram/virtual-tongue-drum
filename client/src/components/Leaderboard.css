@@ -1,0 +1,73 @@
+.leaderboard {
+  margin-top: 20px;
+  padding-bottom: 20px;
+}
+
+.leaderboard__title {
+  color: #334155;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.leaderboard__text {
+  color: #64748b;
+}
+
+.leaderboard__text--italic {
+  font-style: italic;
+}
+
+.leaderboard__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.leaderboard__head-row {
+  color: #64748b;
+  text-align: left;
+}
+
+.leaderboard__head-cell {
+  padding: 8px 4px;
+  font-weight: 600;
+}
+
+.leaderboard__head-cell--right {
+  text-align: right;
+}
+
+.leaderboard__row {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.leaderboard__rank {
+  padding: 8px 4px;
+  color: #64748b;
+  font-weight: normal;
+}
+
+.leaderboard__rank--top {
+  color: #d97706;
+  font-weight: bold;
+}
+
+.leaderboard__user {
+  padding: 8px 4px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.leaderboard__song {
+  padding: 8px 4px;
+  color: #64748b;
+}
+
+.leaderboard__score {
+  padding: 8px 4px;
+  text-align: right;
+  color: #ed8e0a;
+  font-weight: bold;
+}

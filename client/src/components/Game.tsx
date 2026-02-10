@@ -2,6 +2,7 @@ import { useState } from "react";
 import TongueDrum from "./TongueDrum";
 import { DRUM_PADS } from "../data/drumData";
 import type { Song } from "../types";
+import "./Game.css";
 
 interface GameProps {
   song: Song;
@@ -62,122 +63,36 @@ const Game = ({ song, user, onEnd }: GameProps) => {
   const upcomingNotes = song.notes.slice(currentIndex, currentIndex + 5);
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background:
-          "radial-gradient(circle at center, rgb(246, 191, 80) 0%, #ef8af2cf 100%)",
-      }}
-    >
+    <div className="game">
       {/* HUD */}
-      <div
-        style={{
-          position: "absolute",
-          top: "20px",
-          left: "20px",
-          right: "20px",
-          height: "50px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          zIndex: 50,
-          pointerEvents: "none",
-        }}
-      >
-        {/* LEFT: Mode Toggle */}
-        <div style={{ pointerEvents: "auto" }}>
+      <div className="game__hud">
+        <div className="game__hud-section">
           <button
             onClick={() => setViewMode(viewMode === "keys" ? "notes" : "keys")}
-            style={{
-              background: "rgba(255, 255, 255, 0.2)",
-              backdropFilter: "blur(4px)",
-              border: "1px solid rgba(255, 255, 255, 0.4)",
-              color: "white",
-              padding: "10px 16px",
-              borderRadius: "12px",
-              cursor: "pointer",
-              fontWeight: "700",
-              fontSize: "0.9rem",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-            }}
+            className="game__toggle"
           >
             {viewMode === "keys" ? "Show Notes" : "Show Keys"}
           </button>
         </div>
 
-        {/* CENTER: The Single Stats Box */}
-        <div
-          style={{
-            position: "absolute",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "white",
-            padding: "10px 25px",
-            borderRadius: "30px",
-            boxShadow: "0 4px 15px rgba(0,0,0,0.15)",
-            display: "flex",
-            alignItems: "center",
-            gap: "20px",
-            pointerEvents: "auto",
-            minWidth: "200px",
-            justifyContent: "center",
-          }}
-        >
-          {/* Notes Section */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              color: "#334155",
-              fontWeight: "800",
-              fontSize: "1.2rem",
-            }}
-          >
-            <span style={{ fontSize: "1.2rem" }}>🎵</span>
+        <div className="game__stats">
+          <div className="game__stat">
+            <span className="game__stat-icon">🎵</span>
             <span>
               {currentIndex} / {song.notes.length}
             </span>
           </div>
 
-          {/* Mistakes Section */}
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              color: mistakes > 0 ? "#ef4444" : "#334155",
-              fontWeight: "800",
-              fontSize: "1.2rem",
-            }}
+            className={`game__stat${mistakes > 0 ? " game__stat--danger" : ""}`}
           >
-            <span style={{ fontSize: "1.1rem" }}>❌</span>
+            <span className="game__stat-icon game__stat-icon--danger">❌</span>
             <span>{mistakes}</span>
           </div>
         </div>
 
-        {/* RIGHT: Quit Button */}
-        <div style={{ pointerEvents: "auto" }}>
-          <button
-            onClick={handleQuit}
-            style={{
-              background: "#ef4444",
-              color: "white",
-              border: "none",
-              padding: "10px 20px",
-              borderRadius: "12px",
-              fontWeight: "700",
-              fontSize: "0.9rem",
-              cursor: "pointer",
-              boxShadow: "0 4px 6px rgba(220, 38, 38, 0.3)",
-            }}
-          >
+        <div className="game__hud-section">
+          <button onClick={handleQuit} className="game__quit">
             QUIT
           </button>
         </div>
@@ -185,41 +100,9 @@ const Game = ({ song, user, onEnd }: GameProps) => {
 
       {/* START OVERLAY */}
       {!isPlaying && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(5px)",
-            zIndex: 100,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "3rem",
-              color: "white",
-              textShadow: "0 2px 10px rgba(0,0,0,0.3)",
-              marginBottom: "10px",
-            }}
-          >
-            Ready, {user}?
-          </h1>
-          <p
-            style={{
-              color: "#ffffff",
-              fontSize: "1.5rem",
-              fontStyle: "italic",
-              margin: "0 0 30px 0",
-              maxWidth: "600px",
-            }}
-          >
+        <div className="game__overlay">
+          <h1 className="game__overlay-title">Ready, {user}?</h1>
+          <p className="game__overlay-subtitle">
             Hit the highlighted keys on the drum to play the song!
           </p>
 
@@ -232,22 +115,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
                 setActiveNote(song.notes[0].key);
               }
             }}
-            style={{
-              padding: "20px 60px",
-              fontSize: "2rem",
-              borderRadius: "50px",
-              border: "none",
-              background: "#f59e0b",
-              color: "white",
-              fontWeight: "800",
-              cursor: "pointer",
-              boxShadow: "0 10px 20px rgba(245, 158, 11, 0.4)",
-              transition: "transform 0.2s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.transform = "scale(1.05)")
-            }
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            className="game__play"
           >
             PLAY
           </button>
@@ -255,37 +123,11 @@ const Game = ({ song, user, onEnd }: GameProps) => {
       )}
 
       {/* BUBBLES */}
-      <div
-        style={{
-          position: "absolute",
-          top: "100px",
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          gap: "15px",
-          zIndex: 10,
-          opacity: isPlaying ? 1 : 0.3,
-        }}
-      >
+      <div className={`game__bubbles${isPlaying ? "" : " game__bubbles--dim"}`}>
         {upcomingNotes.map((note, idx) => (
           <div
             key={`${currentIndex}-${idx}`}
-            style={{
-              width: idx === 0 ? "65px" : "45px",
-              height: idx === 0 ? "65px" : "45px",
-              borderRadius: "50%",
-              background: idx === 0 ? "#facc15" : "rgba(255,255,255,0.6)",
-              border: "4px solid white",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: "bold",
-              fontSize: idx === 0 ? "1.4rem" : "0.9rem",
-              color: "#334155",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-              transform: idx === 0 ? "scale(1.1)" : "scale(1)",
-              transition: "all 0.2s",
-            }}
+            className={`game__bubble${idx === 0 ? " game__bubble--active" : ""}`}
           >
             {getLabel(note.key)}
           </div>
@@ -293,14 +135,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
       </div>
 
       {/* DRUM */}
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "700px",
-          marginTop: "80px",
-          zIndex: 5,
-        }}
-      >
+      <div className="game__drum">
         <TongueDrum
           onHit={handleHit}
           activeNote={isPlaying ? activeNote : null}

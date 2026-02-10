@@ -1,0 +1,45 @@
+.tongue-drum {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tongue-drum__toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  z-index: 10;
+}
+
+.tongue-drum__svg {
+  max-width: 90vh;
+  max-height: 90vw;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
+}
+
+.tongue-drum__pad {
+  cursor: pointer;
+}
+
+.tongue-drum__pad-path {
+  transition: fill 0.1s;
+}
+
+.tongue-drum__pad-label {
+  text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  font-weight: bold;
+  fill: #ffffff;
+}
