@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from .db import db, migrate
+from .db import db
 from .routes.song_routes import songs_bp
 from .routes.score_routes import scores_bp 
 import os
@@ -22,7 +22,6 @@ def create_app(config=None):
         app.config.update(config)
 
     db.init_app(app)
-    migrate.init_app(app, db)
 
     app.register_blueprint(songs_bp, url_prefix='/api')
     app.register_blueprint(scores_bp, url_prefix='/api')

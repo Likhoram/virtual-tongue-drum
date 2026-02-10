@@ -1,5 +1,5 @@
-from .db import db 
-from datetime import datetime
+from .db import db
+from datetime import datetime, timezone
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -37,7 +37,7 @@ class Score(db.Model):
     song_id = db.Column(db.Integer, db.ForeignKey('songs.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
     mistakes = db.Column(db.Integer, default=0)
-    played_at = db.Column(db.DateTime, default=datetime.utcnow)
+    played_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):
         return {

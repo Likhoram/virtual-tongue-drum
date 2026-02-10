@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
-from ..models import Song 
+from ..models import Song
+from ..db import db
 
 songs_bp = Blueprint('songs', __name__) 
 
@@ -10,7 +11,7 @@ def get_songs():
 
 @songs_bp.route('/songs/<int:id>', methods=['GET'])
 def get_song(id):
-    song = Song.query.get(id)
+    song = db.session.get(Song, id)
     if song:
         return jsonify(song.to_dict()), 200
     return jsonify({"error": "Song not found"}), 404
