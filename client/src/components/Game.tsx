@@ -36,6 +36,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
       if (nextIndex >= song.notes.length) {
         const finalScore = calculateFinalScore(song.notes.length);
         setTimeout(() => {
+          setIsPlaying(false);
           onEnd(finalScore, mistakes);
         }, 500);
       } else {
@@ -50,6 +51,7 @@ const Game = ({ song, user, onEnd }: GameProps) => {
   };
 
   const handleQuit = () => {
+    setIsPlaying(false);
     const finalScore = calculateFinalScore(currentIndex);
     onEnd(finalScore, mistakes);
   };
