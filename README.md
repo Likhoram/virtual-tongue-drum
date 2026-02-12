@@ -37,7 +37,7 @@
 * **Language:** Python 3
 * **Framework:** Flask (REST API)
 * **ORM:** SQLAlchemy
-* **Database:** PostgreSQL (Production), SQLite (Dev)
+* **Database:** PostgreSQL
 
 **Frontend:**
 * **Framework:** React 19 (Vite)
@@ -127,7 +127,7 @@ server/   # Flask API + database models
 ## Deployment
 - **Frontend:** Vercel
 - **Backend:** Render
-- **Database:** PostgreSQL
+- **Database:** Neon
 
 
 ## Author
