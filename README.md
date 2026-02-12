@@ -9,12 +9,12 @@
 
 **Live Demo:** [Play the Game Here](https://virtual-tongue-drum.vercel.app/)
 
-**Gameplay Demo:** [Watch the Demo](YOUR_VIDEO_LINK_HERE)
+**Gameplay Demo:** [Watch the Demo](https://www.youtube.com/watch?v=GpOePHBJSrQ)
 
 
 ## About the Project
 
-**Virtual Tongue Drum** is a web-based application that serves as both a digital instrument and a rhythm game. It simulates the unique circular layout of a physical tongue drum, blending musical creativity with arcade-style mechanics. By challenging players to map visual cues to specific notes in real-time, the application gamifies the learning process, helping users master the instrument while having fun.
+**Virtual Tongue Drum** is a web-based application that serves as both a digital instrument and a music game. It simulates the unique circular layout of a physical tongue drum, blending musical creativity with arcade-style mechanics. By challenging players to map visual cues to specific notes in real-time, the application gamifies the learning process, helping users master the instrument while having fun.
 
 ![Home Screen](./assets/home.png)
 
