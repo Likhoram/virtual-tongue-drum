@@ -37,7 +37,7 @@ def seed_database():
         red_river = Song(
             title="Red River Valley (红河谷)",
             notes=[
-                {"key": "G3"}, {"key": "C4"}, {"key": "E4"}, {"key": "E4"}, {"key": "E4"}, {"key": "D4"}, {"key": "E4"}, {"key": "D4"}, {"key": "C4"},
+                {"key": "G3"}, {"key": "C4"}, {"key": "E4"}, {"key": "E4"}, {"key": "E4"}, {"key": "E4"}, {"key": "D4"}, {"key": "E4"}, {"key": "D4"}, {"key": "C4"},
                 {"key": "G3"}, {"key": "C4"}, {"key": "E4"}, {"key": "C4"}, {"key": "E4"}, {"key": "G4"}, {"key": "F4"}, {"key": "E4"}, {"key": "D4"},
                 {"key": "G4"}, {"key": "F4"}, {"key": "E4"}, {"key": "E4"}, {"key": "D4"}, {"key": "C4"}, {"key": "D4"}, {"key": "E4"}, {"key": "G4"}, {"key": "F4"},
                 {"key": "A3"}, {"key": "A3"}, {"key": "G3"}, {"key": "B3"}, {"key": "C4"}, {"key": "D4"}, {"key": "E4"}, {"key": "D4"}, {"key": "C4"}
